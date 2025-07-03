@@ -52,8 +52,10 @@ export function ProjectForm({ onSuccess }: { onSuccess?: () => void }) {
   
       const projectId = project.id;
   
+
       // 2. Call backend to queue scan
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/scan`, {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.111.40.124:8000";
+      const response = await fetch(`${BASE_URL}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
