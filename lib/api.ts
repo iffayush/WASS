@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.111.40.124:8000";
 
 export async function startScan({ url, user_id, project_id }: {
     url: string;
