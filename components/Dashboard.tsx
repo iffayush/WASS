@@ -18,7 +18,11 @@ export function Dashboard() {
       <div className="text-center py-16">
         <h1 className="text-3xl font-bold mb-4">Welcome to WASS</h1>
         <p className="mb-6">Sign in to start scanning your projects for security risks.</p>
-        <Button onClick={() => supabase.auth.signInWithOAuth({ provider: 'github' })}>
+        <Button onClick={() => supabase.auth.signInWithOAuth({ provider: 'github', options: {
+        redirectTo: 'https://wass-ebon.vercel.app', queryParams: {
+          response_type: 'code', // Use PKCE flow instead of implicit
+        },
+  }})}>
           Sign in with GitHub
         </Button>
       </div>

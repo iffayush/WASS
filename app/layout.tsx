@@ -1,20 +1,20 @@
-// app/layout.tsx
 import './globals.css';
-import { ReactNode } from 'react';
-import { AuthProvider } from '@/components/AuthProvider';
+import Providers from './providers';
 
 export const metadata = {
-  title: 'Web App Security Scanner',
-  description: 'Security risk scanner for developers',
+  title: 'WASS',
+  description: 'Web App Security Scanner',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white">
-        <AuthProvider>
-          <main className="max-w-5xl mx-auto py-8 px-4">{children}</main>
-        </AuthProvider>
+      <body>
+        <Providers initialSession={null}>{children}</Providers>
       </body>
     </html>
   );
