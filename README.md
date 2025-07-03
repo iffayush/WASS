@@ -1,36 +1,38 @@
-# ⚡ WASS – Web App Security Scanner (Frontend)
+# 🧪 WASS — Web App Security Scanner (Frontend)
 
-This is the frontend for **WASS**, a modern Web App Security Scanner that helps developers and teams detect vulnerabilities and stay compliant.
+> Frontend for **WASS**: Scan, Secure & Score Your Web App in Real-Time  
+> Built with 💚 Next.js, TailwindCSS, Supabase, and a lot of caffeine ☕.
 
-## ✨ Features
+![Next.js](https://img.shields.io/badge/Next.js-Frontend-black?style=for-the-badge&logo=next.js)  
+![TailwindCSS](https://img.shields.io/badge/Styled%20With-TailwindCSS-06b6d4?style=for-the-badge&logo=tailwind-css)  
+![Supabase](https://img.shields.io/badge/Auth%20%26%20DB-Supabase-3ecf8e?style=for-the-badge&logo=supabase)  
+![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)
 
-- Supabase GitHub OAuth login
-- Project submission (by URL)
-- Live scan queue tracking
-- Security score & report visualization
-- TailwindCSS + Radix UI + Next.js 14 (App Router)
+---
 
-## 🔧 Tech Stack
+## ⚙️ Core Features
 
-- Next.js (App Router)
-- Tailwind CSS + Radix UI
-- Supabase (Auth + DB)
-- Deployed on Vercel
+- 🔐 GitHub OAuth login (via Supabase Auth)
+- 🧩 Create projects for security scans
+- 🔃 Realtime scan status: `Queued`, `In Progress`, `Completed`
+- 📊 See live scores & detailed reports
+- 💅 Beautiful responsive UI (Tailwind + shadcn/ui)
+- 🚀 Deployed on Vercel
 
-## 🚀 Getting Started
+---
 
+## 🛠 Tech Stack
+
+- **Framework**: Next.js (App Router)
+- **Styling**: TailwindCSS + shadcn/ui
+- **Auth & DB**: Supabase
+- **API Integration**: FastAPI Backend (WASSOps)
+
+---
+
+## 🧑‍💻 Getting Started
+
+### 1. Clone the Repo
 ```bash
-# Clone the repo
-git clone https://github.com/your-username/wass.git
-cd wass
-
-# Install deps
-npm install
-
-# Add environment variables to .env.local
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_API_URL=http://your-backend-url:8000
-
-# Run the app
-npm run dev
+git clone https://github.com/your-username/WASS.git
+cd WASS
