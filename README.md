@@ -1,32 +1,36 @@
-# ⚡ WASS – Web App Security Scanner
+# ⚡ WASS – Web App Security Scanner (Frontend)
 
-**WASS** is a lightweight, developer-friendly web application scanner built for modern SaaS teams. It scans websites and repositories for common security risks and maps them to compliance requirements (like ISO 27001, SOC 2).
+This is the frontend for **WASS**, a modern Web App Security Scanner that helps developers and teams detect vulnerabilities and stay compliant.
 
-## 🔍 Features
+## ✨ Features
 
-- Upload GitHub repo or website URL
-- Auto-scans for security issues using [Nuclei](https://github.com/projectdiscovery/nuclei)
-- Real-time scan status & scoring
-- Supabase-backed auth, data, and session management
-- Fully Dockerized FastAPI backend
-- Vercel-hosted frontend with Next.js App Router
+- Supabase GitHub OAuth login
+- Project submission (by URL)
+- Live scan queue tracking
+- Security score & report visualization
+- TailwindCSS + Radix UI + Next.js 14 (App Router)
 
-## 📦 Tech Stack
+## 🔧 Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), Radix UI, Tailwind CSS
-- **Backend**: FastAPI, Nuclei, Python
-- **Auth & DB**: Supabase (PostgreSQL + Auth)
-- **Infra**: Docker, AWS Lightsail, Vercel
+- Next.js (App Router)
+- Tailwind CSS + Radix UI
+- Supabase (Auth + DB)
+- Deployed on Vercel
 
 ## 🚀 Getting Started
 
 ```bash
-# Frontend
-cd frontend
-npm install
-npm run dev
+# Clone the repo
+git clone https://github.com/your-username/wass.git
+cd wass
 
-# Backend
-cd backend
-docker build -t wass-backend .
-docker run --env-file .env -p 8000:8000 wass-backend
+# Install deps
+npm install
+
+# Add environment variables to .env.local
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_API_URL=http://your-backend-url:8000
+
+# Run the app
+npm run dev
