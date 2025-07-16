@@ -12,7 +12,7 @@ export default function Home() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `https://wass-nu.vercel.app/auth/callback`,
       },
     });
     if (error) console.error('GitHub login error:', error.message);
