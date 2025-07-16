@@ -1,21 +1,23 @@
 // app/layout.tsx
-import './globals.css';
-import { ReactNode } from 'react';
+import './globals.css'
+import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/components/AuthProvider';
 
-export const metadata = {
-  title: 'Web App Security Scanner',
-  description: 'Security risk scanner for developers',
-};
+const inter = Inter({ subsets: ['latin'] })
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export const metadata = {
+  title: 'WASS',
+  description: 'Web App Security Scanner',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white">
+      <body className={inter.className}>
         <AuthProvider>
-          <main className="max-w-5xl mx-auto py-8 px-4">{children}</main>
+          <main>{children}</main>
         </AuthProvider>
       </body>
     </html>
-  );
+  )
 }
