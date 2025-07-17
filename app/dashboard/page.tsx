@@ -29,7 +29,7 @@ export default function Dashboard() {
     setScanResult(null)
     setScanError(null)
     try {
-      const res = await fetch('http://localhost:8000/scan', {
+      const res = await fetch('https://wildfess.in/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target: scanUrl }), // changed to match new schema
