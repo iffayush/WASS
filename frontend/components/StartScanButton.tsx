@@ -22,13 +22,15 @@ export default function StartScanButton({
 
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        repo_url: payload.repoUrl,
-        branch: payload.branch,
-      });
-      
-      const response = await fetch(`http://localhost:5678/webhook/security-scan?${params.toString()}`, {
-        method: "GET",
+      const response = await fetch(`http://localhost:5678/webhook/security-scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repo_url: payload.repoUrl,
+          branch: payload.branch,
+        }),
       });
 
       if (!response.ok) {
