@@ -1,0 +1,16 @@
+---
+description: WASS (Web Application Secret Scanner) project rules
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` in the repository root — it is the canonical instruction set for
+WASS (product thesis, scope, non-goals, hard safety rules, finding schema, working rules, and the
+session bootstrap protocol). Also read `docs/HANDOFF.md` and `docs/TASKS.md` before doing anything,
+and record decisions in `docs/DECISIONS.md`.
+
+Highlights (full text in AGENTS.md):
+- One milestone at a time; acceptance criteria in docs/TASKS.md. Never expand scope — stop and ask.
+- Never build/execute scanned code; no sandboxes. SSRF guards and ownership gating are hard requirements.
+- Raw secrets never leave the engine: renderers/exporters/API/LLM accept only `RedactedFinding`.
+- Rules are not done until fixtures pass; fixtures use obviously fake values.
+- After each task: update docs/TASKS.md, rewrite docs/HANDOFF.md, commit.
