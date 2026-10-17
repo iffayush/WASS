@@ -1,0 +1,4 @@
+This file contains no fake keys at all.
+
+It exists to prove the stub module does not emit findings where there is
+nothing to find. Move along.

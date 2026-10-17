@@ -1,0 +1,16 @@
+# Gitleaks configuration for WASS's own repository.
+#
+# WASS ships deliberately fake, generated secret fixtures under testdata/
+# directories — its own tests scan them (that is the product). Gitleaks
+# cannot know a fixture value is fake, so fixture paths are allowlisted.
+# Nothing outside testdata/ is exempt: the fail-closed pre-commit hook and
+# CI still scan everything else. Never commit real credentials anywhere.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "WASS test fixtures contain generated fake values by design"
+paths = [
+  '''(^|/)testdata/''',
+]
