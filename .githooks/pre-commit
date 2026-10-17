@@ -1,0 +1,29 @@
+#!/bin/sh
+# WASS pre-commit hook — fail-closed secret scan (gitleaks).
+# Enabled via: git config core.hooksPath .githooks   (or: make hooks)
+#
+# If gitleaks is missing, the commit is ABORTED with install instructions —
+# a missing scanner must never silently pass. Bypass with `git commit
+# --no-verify` only in a true emergency, never to commit real secrets.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "" >&2
+    echo "ERROR: gitleaks is not installed and the WASS pre-commit hook is fail-closed." >&2
+    echo "       Install it, then retry your commit:" >&2
+    echo "         winget install Gitleaks.Gitleaks" >&2
+    echo "         scoop install gitleaks" >&2
+    echo "       (Emergency bypass, never for real secrets: git commit --no-verify)" >&2
+    exit 1
+fi
+
+gitleaks protect --staged --redact --no-banner
+status=$?
+
+if [ $status -ne 0 ]; then
+    echo "" >&2
+    echo "ERROR: gitleaks flagged potential secrets in staged changes — commit aborted." >&2
+    echo "       Fix or remove the findings, then commit again." >&2
+    exit 1
+fi
+
+exit 0

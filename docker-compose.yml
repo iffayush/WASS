@@ -1,0 +1,24 @@
+# WASS local development — Postgres only.
+# The engine never needs a database; the server (M7) persists scans here.
+# Start: docker compose up -d   ·  Stop: docker compose down
+# DSN: postgres://wass:wass@localhost:5432/wass?sslmode=disable
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: wass
+      POSTGRES_PASSWORD: wass
+      POSTGRES_DB: wass
+    ports:
+      - "5432:5432"
+    volumes:
+      - wass_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wass"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  wass_pgdata:
