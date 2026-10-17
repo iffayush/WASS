@@ -1,0 +1,40 @@
+# --- Go ---
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+coverage.txt
+coverage.html
+
+# --- Node / frontend (in addition to frontend/.gitignore) ---
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.eslintcache
+
+# --- Environment & secrets (never commit real credentials) ---
+.env
+.env.*
+!.env.example
+
+# --- Local scan scratch space (untrusted repo clones, crawl caches) ---
+.scratch/
+tmp/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Tooling session state ---
+.zcode/
+.cursor-cache/
