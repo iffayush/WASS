@@ -28,15 +28,16 @@ docs updated; HANDOFF rewritten.
   safety checklist (D-007), Go version (D-003), pgx choice (D-005), and GitHub App decision
   (D-006) recorded; CI includes a secret-scan step and a pre-commit hook exists.
 
-## M1 — Schema and engine skeleton
+## M1 — Schema and engine skeleton ✅ (complete)
 
-- [ ] Define the versioned common finding schema (all fields per SPEC §4) with unit tests
-- [ ] Implement `RedactedFinding` with the one-way `redact()` boundary (first4+last4+hash); test that raw values cannot leak
-- [ ] Define the module interface (one Go interface; modules emit findings into the schema)
-- [ ] Scanner core: run registered modules over a target, collect + dedup findings
-- [ ] CLI `cmd/wass`: `scan --repo <path> --fingerprint-key …` emitting JSON to stdout
-- [ ] Fingerprinting: HMAC-SHA256 of normalized raw value, versioned key, hard error without key (D-008)
-- **Acceptance:** unit tests for schema and redaction pass; `wass scan` runs on a fixture directory with a stub module and emits JSON.
+- [x] Define the versioned common finding schema (all fields per SPEC §4) with unit tests (`engine/finding`)
+- [x] Implement `RedactedFinding` with the one-way `FromCandidate` boundary (first4+last4+hash, ≤12 chars fully masked); raw values live only in `Candidate`, whose `MarshalJSON` is a hard tripwire; tested that raw values cannot leak
+- [x] Define the module interface (`engine.Module`: `Name()` + `Scan(ctx, target, emit)`); modules emit candidates only
+- [x] Scanner core: run registered modules, convert candidates behind the boundary, dedup on `(rule_id, fingerprint)`, assign IDs, validate every finding
+- [x] CLI `cmd/wass`: `scan --repo <path>` emitting `RedactedReport` JSON to stdout; `--domain` rejects with an M4 pointer; fingerprinting: HMAC-SHA256 of normalized raw value (trim + strict base64-unwrap), versioned key, hard error without key (D-008)
+- [x] Stub module (`engine/stubmod`) with generated fixtures: dedup, skip lists (.git/node_modules/vendor), binary + size guards, snippet windowing — all tested
+- [x] `.gitleaks.toml` allowlist scoped to `testdata/` so fake fixtures pass our own fail-closed hook
+- **Acceptance:** unit tests for schema and redaction pass; `wass scan` runs on a fixture directory with a stub module and emits JSON (verified live: 2 locations dedup to 1 finding, evidence redacted, raw value absent from output).
 
 ## M2 — Secrets rules engine (working tree)
 

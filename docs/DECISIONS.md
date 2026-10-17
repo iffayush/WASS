@@ -156,3 +156,68 @@ choice in the project gets an entry here.
 - **Alternatives:** deleting `C:\Users\Acer\.git` unilaterally (rejected: not ours to remove;
   a tool may depend on it).
 - **Reason:** owner should decide whether to remove it.
+
+## D-012 — M1 schema mechanics: candidate/tripwire design and redaction thresholds
+
+- **Date:** 2026-10-17 (M1)
+- **Decision:** Raw secret values exist in exactly one type, the engine-internal
+  `finding.Candidate`, and only in memory. `Candidate.MarshalJSON` always fails (a
+  serialization tripwire), so raw values cannot leak through any JSON path. The one-way
+  constructor `finding.FromCandidate(candidate, key, keyVersion) (Finding, error)` is the only
+  place fingerprinting and evidence-redaction happen. `Finding` (internal) and
+  `RedactedFinding` (public projection for renderers, exporters, API, share links, LLM) are
+  structurally identical today; the distinct type is the enforcement mechanism — fields that
+  must never leave the engine simply do not get added to `RedactedFinding`.
+  Redaction displays first 4 + last 4 characters; values of 12 characters or fewer are masked
+  entirely (otherwise a 10-char secret would expose 8 of its characters).
+- **Alternatives:** redaction at marshal time via custom JSON for every export path (rejected:
+  N places to get wrong); keeping Finding/RedactedFinding as one type with a lint rule
+  (rejected: compile error > lint hope).
+- **Reason:** makes leaking a raw value a compile-time or loud-runtime error, per the master
+  prompt's redaction-boundary requirement.
+
+## D-013 — Base64 normalization is strict and symmetric
+
+- **Date:** 2026-10-17 (M1)
+- **Decision:** `NormalizeRaw` trims whitespace and unwraps a value only when it strictly
+  decodes as standard/URL-safe base64 (padded or raw), the decoded bytes are valid UTF-8, and
+  they contain no control characters. Unwrapping happens before HMAC fingerprinting, so a
+  secret observed raw and the same secret observed base64-wrapped produce the same fingerprint
+  and dedup to one finding (an M3 acceptance requirement, proven by a test now).
+- **Alternatives:** fingerprinting both raw and decoded forms with a union match (rejected:
+  doubles the fingerprint space and the dedup logic).
+- **Reason:** single canonical form per value; deterministic, tested behavior on edge cases
+  (short strings, binary decodes, punctuation-heavy secrets stay untouched).
+
+## D-014 — Modules emit candidates; the scanner owns the boundary
+
+- **Date:** 2026-10-17 (M1)
+- **Decision:** The `engine.Module` interface is `Name() string` +
+  `Scan(ctx, Target, emit func(Candidate) error) error`. Modules never construct `Finding`s —
+  the scanner converts every candidate via `FromCandidate`, dedups on
+  `(rule_id, fingerprint)`, merges locations (skipping exact duplicates), assigns sequential
+  IDs `f-000001…`, and validates every assembled finding. A module error aborts the scan with
+  the module name attached. Scan options require a fingerprint key and version up front
+  (D-008). The CLI stamps `FingerprintKeyVersion = 1` (a build constant, not per-scan
+  config, so all fingerprints of a build agree; rotation bumps the constant with the D-008
+  migration).
+- **Alternatives:** modules producing Findings directly (rejected: redaction and fingerprinting
+  would happen in N places); ID assignment inside FromCandidate (rejected: IDs are a report
+  property, and dedup must merge before numbering).
+- **Reason:** one conversion point = one place to audit for the security property that defines
+  the product.
+
+## D-015 — Fake fixtures vs our own fail-closed gitleaks hook
+
+- **Date:** 2026-10-17 (M1)
+- **Decision:** WASS's own test fixtures deliberately contain generated fake secrets
+  (`WASSFAKE-…`, matching no real provider format). A repo-root `.gitleaks.toml` extends the
+  default config with an allowlist scoped to `(^|/)testdata/` paths only. Everything outside
+  `testdata/` remains scanned by both the pre-commit hook and CI. Fixture values are
+  generated, pattern-obvious, and documented as fake in the fixtures themselves.
+- **Alternatives:** running the hook with `--no-verify` for fixture commits (rejected: habit
+  formation is how real leaks happen); encoding fixtures as Go strings instead of files
+  (rejected: M2's rules-fixture harness needs real files).
+- **Reason:** the master prompt requires both fake fixtures AND a fail-closed secret scan;
+  this is the narrowest reconciliation, and the allowlist scope is itself reviewed in every
+  PR that touches it.

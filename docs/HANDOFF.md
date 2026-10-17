@@ -1,26 +1,36 @@
 # Handoff
 
-Updated: 2026-10-17 by ZCode (GLM-5.3-Flash)
-Current milestone: **M0 complete** — next is **M1 (schema and engine skeleton)**
+Updated: 2026-10-17 by ZCode (GLM-5.3)
+Current milestone: **M1 complete** — next is **M2 (secrets rules engine, working tree)**
 
 ## Done this session
 
-- Analyzed the master build prompt against the actual (pre-existing) repo state; owner then
-  ordered a **full reset**: old README (Docker-orchestrator design, contradicted the non-goals),
-  old frontend (n8n-webhook client), and old git history all removed. WASS derives solely from
-  the master prompt. Old content remains on the GitHub remote (`github.com/iffayush/WASS`,
-  commit `69b5c18`) if ever needed (D-001, D-002).
-- Fresh git repository initialized **inside the project folder** (previously git resolved to a
-  stray home-directory repo at `C:\Users\Acer\.git` — see D-011).
-- Toolchain verified: Go 1.26.5, Docker 28.2.2, Git 2.45.2; `make`/`golangci-lint` not installed
-  (documented fallbacks, D-010). **gitleaks 8.30.1 installed via winget** so the fail-closed
-  pre-commit hook works.
-- All M0 artifacts committed (7 commits, conventional messages): `AGENTS.md` + `CLAUDE.md` +
-  `.cursor/rules/wass.mdc`; `docs/SPEC.md`, `ARCHITECTURE.md`, `DECISIONS.md` (D-001…D-011),
-  `TASKS.md`, `HANDOFF.md`; `go.mod` (module `github.com/iffayush/wass`, floor go 1.22) with
-  `engine/`, `server/`, `cmd/wass/` stubs + passing tests; `rules/README.md`; `Makefile`,
-  `docker-compose.yml` (Postgres 17), `.github/workflows/ci.yml` (test matrix 1.22.x+stable,
-  vet, gitleaks), `.githooks/pre-commit` (fail-closed), `.gitattributes`, `.gitignore`, README.
+M1 (schema and engine skeleton), five commits:
+
+- `engine/finding` — versioned common finding schema (SchemaVersion 1) with all SPEC §4 fields;
+  redaction boundary implemented as designed in D-012: raw values live only in the internal
+  `Candidate` (whose `MarshalJSON` hard-fails), `FromCandidate` is the one-way constructor
+  (HMAC-SHA256 fingerprint of the normalized raw value + evidence redaction), `RedactedFinding`
+  is the public projection. Redaction = first4+last4 (≤12 chars fully masked). Base64-unwrap
+  normalization per D-013 (strict, symmetric — raw and wrapped forms fingerprint identically).
+  19 unit tests.
+- `engine` — `Module` interface (`Name` + `Scan(ctx, target, emit)`; modules emit candidates
+  only) and `Scanner` core: converts candidates behind the boundary, dedups on
+  `(rule_id, fingerprint)`, merges unique locations, assigns IDs, validates every finding,
+  records modules run + timing. `Report.Redacted()` → `RedactedReport`. Per D-014.
+- `engine/stubmod` — placeholder module scanning `WASSFAKE-[A-Z0-9]{32}` over a repo working
+  tree: skip lists (.git/node_modules/vendor), binary sniff, per-file size guard, capped
+  context snippets; generated fixtures under `testdata/fixture` (positive, negative, binary).
+- `cmd/wass` — real CLI: `scan --repo <path> [--pretty] [--timeout]`, key from
+  `--fingerprint-key` or `WASS_FINGERPRINT_KEY` (hard error without either, D-008),
+  `--domain` rejected with an M4 pointer, JSON `RedactedReport` on stdout / diagnostics on
+  stderr. End-to-end tests include "raw fake value absent from CLI output".
+- `.gitleaks.toml` — allowlist scoped to `testdata/` only (D-015), so fake fixtures pass our
+  own fail-closed hook; verified live with `gitleaks detect` before committing.
+
+Verified live: `wass scan --repo engine/stubmod/testdata/fixture --fingerprint-key demo-key`
+emits one finding with two deduped locations, evidence `"api_key = \"WASS…G5H6\""`, no raw
+value in output. All acceptance criteria met.
 
 ## In progress
 
@@ -28,60 +38,63 @@ Nothing — clean stopping point.
 
 ## Next steps (ordered, concrete)
 
-1. **M1 task 1:** define the versioned common finding schema in `engine/` (all fields per
-   `docs/SPEC.md` §4) with unit tests.
-2. Implement `RedactedFinding` + one-way `redact()` (first4+last4+hash); test raw values cannot
-   leak through the boundary.
-3. Define the module interface; scanner core that runs modules and collects findings.
-4. Fingerprinting: HMAC-SHA256 of normalized raw value, versioned key, **hard error without key**
-   (D-008).
-5. CLI: `wass scan --repo <path> --fingerprint-key …` emitting JSON; run against a fixture
-   directory with a stub module.
-6. M1 acceptance: unit tests for schema and redaction pass; CLI works on fixtures. Update
-   TASKS/HANDOFF per task and commit.
+1. **M2 task 1:** YAML rule format + loader in `engine/rules` (id, description, regex,
+   keywords, entropy threshold, provider, default_classification, remediation_template) with
+   validation tests. Add `golangci-lint` to CI (first M2 task in TASKS.md, D-010).
+2. Keyword prefilter (Aho-Corasick — evaluate `cloudflare/ahocorasick` vs hand-rolled; justify
+   the dependency in DECISIONS if external).
+3. Context scoring: entropy, charset mix, nearby variable names, path downscoring
+   (test/docs/example), placeholder detection. **Store candidate features per candidate**
+   (SPEC §12 needs them later).
+4. Skip lists (configurable; lockfiles, vendor/, node_modules/, binaries, generated assets) —
+   each skipped category counted for the coverage statement.
+5. Windowed scanning for minified/large inputs + per-file size/time guards + documented max
+   token length.
+6. Decoders: base64, URL-encoding, string concatenation (`"AKIA"+"IOSFODNN7"+"EXAMPLE"`), one
+   fixture each.
+7. Static classification table (Stripe pk_ public / sk_ critical, AWS critical, Firebase
+   dangerous_if_misconfigured, etc.).
+8. Initial rule set: AWS, GitHub, Stripe, Google, Firebase, Supabase, Slack, Twilio, SendGrid,
+   private keys, JWTs, generic high-entropy — every rule with positive + negative fixtures
+   (CI merge gate).
+9. Wire the secrets module into the CLI scanner; no-raw-secrets-in-output-or-logs test.
 
-## Decisions made
+## Decisions made this session
 
-All in [docs/DECISIONS.md](DECISIONS.md): D-001 full reset (owner-authorized) · D-002 frontend
-starts empty, new UI in M9 · D-003 Go 1.26.x / floor 1.22 · D-004 module path lowercase ·
-D-005 pgx v5 + SKIP LOCKED queue, no Redis · D-006 GitHub App (fine-grained PAT rejected) ·
-D-007 clone-hardening checklist with Windows adaptation · D-008 fingerprint key handling (no
-default) · D-009 stdlib mux first · D-010 Windows dev reality (make/lint deferred) · D-011
-home-dir git repo hazard flagged.
+D-012 (candidate/tripwire design, ≤12-char full mask), D-013 (strict base64 normalization),
+D-014 (modules emit candidates; scanner owns the boundary), D-015 (testdata-scoped gitleaks
+allowlist) — all in [docs/DECISIONS.md](DECISIONS.md).
 
 ## Open questions for the owner
 
-1. **Remote:** no `origin` is configured (fresh start). Re-adding
-   `https://github.com/iffayush/WASS.git` and **force-pushing** the new history over the old
-   `master` rewrites public history — say the word and it will be done (or point at a new repo).
-2. **`C:\Users\Acer\.git`** (stray home-directory repo from "Lens Studio", D-011): recommend
-   removing it, but it is not ours to delete.
-3. **License:** none chosen yet — needed before the first public release (noted in README).
-4. **Install `make` locally?** Optional; until then use the plain `go` commands (D-010).
+Unchanged from M0:
+
+1. **Remote:** none configured. Publishing means re-adding `github.com/iffayush/WASS.git` and
+   force-pushing the new history over `master` — owner's call.
+2. **`C:\Users\Acer\.git`** stray home repo (D-011) — still flagged for the owner.
+3. **License** — still unchosen.
 
 ## Gotchas
 
-- **gitleaks PATH:** winget added it to the user PATH; shells opened *before* install don't see
-  it. Fix: open a new terminal, or
-  `export PATH="$PATH:$HOME/AppData/Local/Microsoft/WinGet/Links"`.
-- **No `make` on this machine** — use the plain commands from the Makefile header (D-010).
-- **golangci-lint intentionally deferred to M2** (nothing to lint at M0; `go vet` runs in CI).
-- CRLF→LF conversion warnings on `git add` are expected (`.gitattributes` normalizes; the repo
-  stores LF).
-- Windows + Git Bash: quote the project path (it contains a space).
-- CI's gitleaks step uses `fetch-depth: 0`; keep it or full-history scanning breaks.
+- **gitleaks PATH** in pre-2026-10-17 shells: `export PATH="$PATH:$HOME/AppData/Local/Microsoft/WinGet/Links"`.
+- **No `make` locally** — use the plain `go` commands (D-010).
+- gitleaks needs `.gitleaks.toml` (committed M1) — fixtures under `testdata/` are allowlisted;
+  any new fake-secret fixture must live under a `testdata/` path or the hook will block.
+- CLI test helper swaps `os.Stdout`/`os.Stderr` via pipes — fine for small outputs; don't
+  print >64 KiB from cliMain in tests.
+- CRLF conversion warnings from git are expected (`.gitattributes` normalizes to LF).
 
 ## How to verify (confirm the current state is green)
 
 ```sh
 cd "/c/Users/Acer/Desktop/Coding Projects/Go/WASS"
-go vet ./...                      # clean
-go test ./...                     # engine + server packages: ok
-go build -o bin/ ./cmd/wass && ./bin/wass.exe --version   # wass 0.0.1-dev
-docker compose config --quiet     # valid compose file (Docker Desktop must be installed)
-git config core.hooksPath         # .githooks
-git log --oneline                 # 7 conventional commits
-git status                        # clean
+go vet ./... && go test ./...        # all packages ok
+go build -o bin/ ./cmd/wass
+./bin/wass.exe scan --repo engine/stubmod/testdata/fixture --fingerprint-key demo-key
+# → JSON with findings_count 1, two locations, evidence "WASS…G5H6", no raw value
+./bin/wass.exe scan --repo .          # → hard error: fingerprint key required (D-008)
 export PATH="$PATH:$HOME/AppData/Local/Microsoft/WinGet/Links"
-gitleaks detect --no-banner --redact   # no leaks found
+gitleaks detect --no-banner --redact  # no leaks
+git log --oneline                     # 12 commits, conventional messages
+git status                            # clean
 ```
