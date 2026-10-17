@@ -67,12 +67,12 @@ allowlist) — all in [docs/DECISIONS.md](DECISIONS.md).
 
 ## Open questions for the owner
 
-Unchanged from M0:
+Unchanged from M0, minus the remote question (resolved 2026-10-17: `origin`
+re-added and the new history force-pushed over `master`; old content only in
+reflogs/GitHub support):
 
-1. **Remote:** none configured. Publishing means re-adding `github.com/iffayush/WASS.git` and
-   force-pushing the new history over `master` — owner's call.
-2. **`C:\Users\Acer\.git`** stray home repo (D-011) — still flagged for the owner.
-3. **License** — still unchosen.
+1. **`C:\Users\Acer\.git`** stray home repo (D-011) — still flagged for the owner.
+2. **License** — still unchosen.
 
 ## Gotchas
 
