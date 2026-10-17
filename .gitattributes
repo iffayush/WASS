@@ -1,0 +1,11 @@
+# Normalize line endings: LF in the repo, native in the working tree.
+* text=auto
+
+# Force LF for files where CRLF breaks tooling or pollutes diffs.
+*.go text eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
