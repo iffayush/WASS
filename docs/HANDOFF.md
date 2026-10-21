@@ -76,6 +76,10 @@ reflogs/GitHub support):
 
 ## Gotchas
 
+- **gitleaks-action removed from CI (D-016).** It crashed on the initial force-push: its
+  push-diff range `<root>^..<head>` references the parentless root commit. CI now installs
+  pinned gitleaks 8.30.1 and scans full history (`gitleaks git .`). Any CI change must keep
+  `fetch-depth: 0`.
 - **gitleaks PATH** in pre-2026-10-17 shells: `export PATH="$PATH:$HOME/AppData/Local/Microsoft/WinGet/Links"`.
 - **No `make` locally** — use the plain `go` commands (D-010).
 - gitleaks needs `.gitleaks.toml` (committed M1) — fixtures under `testdata/` are allowlisted;

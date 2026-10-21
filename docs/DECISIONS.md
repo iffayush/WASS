@@ -221,3 +221,22 @@ choice in the project gets an entry here.
 - **Reason:** the master prompt requires both fake fixtures AND a fail-closed secret scan;
   this is the narrowest reconciliation, and the allowlist scope is itself reviewed in every
   PR that touches it.
+
+## D-016 — CI secret scan: pinned direct gitleaks, full history, not gitleaks-action
+
+- **Date:** 2026-10-21
+- **Decision:** The CI gitleaks job downloads a pinned gitleaks release (8.30.1, matching the
+  local dev install) and runs `gitleaks git . --redact --exit-code 1` over the **full**
+  repository history on every push and PR, uploading the SARIF report only on failure.
+  `gitleaks-action@v2` is removed.
+- **What broke:** on the initial force-push, the action computed the scan range
+  `<root-commit>^..<head>`; the root commit has no parent, git aborted with "unknown
+  revision", and the action failed ("Unexpected exit code [1]"). The range logic is internal
+  to the action — no config knob avoids it — and every force-push of a fresh history hits it.
+- **Alternatives:** keeping the action and re-running (rejected: the failure recurs on every
+  force-push; the repo has already force-pushed once and may again); opening a fix upstream
+  (helpful, but does not unblock CI now).
+- **Reason:** full-history scanning is strictly safer for a secret scanner than push-diff
+  scanning (old leaks can't slip through a broken/racy range), removes the third-party
+  action's range computation entirely, and pins the scanner version so local hook and CI
+  agree (the action silently used its own 8.24.3).
